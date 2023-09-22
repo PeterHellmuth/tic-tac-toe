@@ -53,6 +53,9 @@ h1{
 
 .game-square{
     color: white;
-    text-align: center;
+    display: flex;
+    flex-direction: column;
     justify-content: center;
+    text-align: center;
+    font-size: 50px;
 }
