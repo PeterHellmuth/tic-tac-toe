@@ -219,8 +219,11 @@ function startGame() {
     while(game.getCurrentPlayer().ai){
         makeAiMove();
         checkStateAndChangePlayer();
-
+        if(game.getCurrentPlayer()==null){
+            break;
+        }
     }
+
 }
 
 function checkStateAndChangePlayer(){
@@ -243,10 +246,13 @@ function gridClicked(event){
     if(game.getCurrentPlayer() && !game.getCurrentPlayer().ai){
         if(game.getCurrentPlayer().makeMove(x,y)){
             checkStateAndChangePlayer();
-            if(game.getCurrentPlayer().ai){
-                makeAiMove();
-                checkStateAndChangePlayer();
+            if(game.getCurrentPlayer()){
+                if(game.getCurrentPlayer().ai){
+                    makeAiMove();
+                    checkStateAndChangePlayer();
+                }
             }
+
         }
     }
 }
