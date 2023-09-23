@@ -2,7 +2,6 @@ const domGameBoard = document.getElementById("game-board");
 const resultText = document.getElementById("result-text");
 const GRID_WIDTH = 3;
 const GRID_HEIGHT = 3;
-let gameOver = false;
 setupDomBoard();
 
 
@@ -161,13 +160,6 @@ const gameBoard = (() => {
     }
     const setCurrentPlayer = (playerIn) => {
         currentPlayer = playerIn;
-        if(currentPlayer.ai){
-            let availableCells = gameBoard.availableCells();
-            if(availableCells && currentPlayer){
-                let moveCellIndex = availableCells[Math.floor(Math.random() * availableCells.length)];
-                currentPlayer.makeMove(moveCellIndex[0],moveCellIndex[1]); 
-            }
-        } 
         return currentPlayer == playerOne ? "It is player one's turn." : "It is player two's turn.";
 
     }    
@@ -175,18 +167,18 @@ const gameBoard = (() => {
         return currentPlayer;
     }
 
-    const playerWins = (cellValue) => {
-        if(!gameOver){                gameOver = true;
-            if(cellValue == "X"){
-                playerOneWins++;
-                resultText.innerText = "Player one wins!";
-            }else{
-                playerTwoWins++;
-                resultText.innerText = "Player two wins!";   
-            }
-            playerOneWinsElem.innerText = "Total wins: " + playerOneWins;
-            playerTwoWinsElem.innerText = "Total wins: " + playerTwoWins;
+    const playerWins = (cellValue) => {   
+        let result = ""; 
+        if(cellValue == "X"){
+            playerOneWins++;
+            result = "Player one wins!";
+        }else{
+            playerTwoWins++;
+            result = "Player two wins!";   
         }
+        playerOneWinsElem.innerText = "Total wins: " + playerOneWins;
+        playerTwoWinsElem.innerText = "Total wins: " + playerTwoWins;
+        return result;
     }
 
     return {
@@ -205,20 +197,10 @@ const player = (name, ai) => {
             let currentPlayer = game.getCurrentPlayer();
             if(currentPlayer == playerOne){
                 gameBoard.setCell(x,y,"X");
-                if(!game.checkForWin()){
-                    let tempResult = game.setCurrentPlayer(playerTwo);
-                    if(tempResult  && !gameOver){
-                        resultText.innerText = tempResult;
-                    }
-                }
+                return true;
             } else{
                 gameBoard.setCell(x,y,"O");
-                if(!game.checkForWin()){
-                    let tempResult = game.setCurrentPlayer(playerOne);
-                    if(tempResult && !gameOver){
-                        resultText.innerText = tempResult;
-                    }
-                }
+                return true;
             }
         }
         return false;
@@ -228,24 +210,52 @@ const player = (name, ai) => {
 
 function startGame() {
     clearBoard();
-    gameOver = false;
     playerOne = player(playerOneNameInput.value, playerOneAiInput.checked);
     playerTwo = player(playerTwoNameInput.value, playerTwoAiInput.checked);
     
-    let tempResult = game.setCurrentPlayer(playerOne);
-    if(!gameOver){
-        resultText.innerText = tempResult;
-    }
+    resultText.innerText = game.setCurrentPlayer(playerOne);
     startGameButton.innerText = "Reset Game";
+
+    while(game.getCurrentPlayer().ai){
+        makeAiMove();
+        checkStateAndChangePlayer();
+
+    }
 }
 
+function checkStateAndChangePlayer(){
+    let winResult = game.checkForWin();
+    if(winResult){
+        resultText.innerText = winResult;
+    } else{
+        if(game.getCurrentPlayer() == playerOne){
+            resultText.innerText  = game.setCurrentPlayer(playerTwo);
+        } else{
+            resultText.innerText = game.setCurrentPlayer(playerOne);
+        }
+    }
+}
 
 function gridClicked(event){
     let id = event.target.id;
     let x = id.charAt(0);
     let y = id.charAt(2);
-    if(game.getCurrentPlayer()){
-        game.getCurrentPlayer().makeMove(x,y);
+    if(game.getCurrentPlayer() && !game.getCurrentPlayer().ai){
+        if(game.getCurrentPlayer().makeMove(x,y)){
+            checkStateAndChangePlayer();
+            if(game.getCurrentPlayer().ai){
+                makeAiMove();
+                checkStateAndChangePlayer();
+            }
+        }
+    }
+}
+
+function makeAiMove(){
+    let availableCells = gameBoard.availableCells();
+    if(availableCells && game.getCurrentPlayer().ai){
+        let moveCellIndex = availableCells[Math.floor(Math.random() * availableCells.length)];
+        game.getCurrentPlayer().makeMove(moveCellIndex[0],moveCellIndex[1]); 
     }
 }
 
